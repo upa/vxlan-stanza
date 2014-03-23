@@ -1,7 +1,7 @@
 Stanza for vxlan interface initialization
 =========================================
 
-This script enables that you can create, confiugre, destroy kernel 
+This script enables that you can create, configure, destroy kernel 
 vxlan interfaces through /etc/network/interfaces notation.
 
 Install
@@ -37,7 +37,7 @@ Notation in /etc/network/interfaces
 	 	vxlan-dev       eth0
 
 
-vxlan-dev can be ommited.
+vxlan-dev can be omitted.
 
 
 Contact
