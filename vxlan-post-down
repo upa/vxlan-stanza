@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# ifdown post-down hook script for vxlan interface
+#
+
+if [ "$IF_VXLAN_VNI" -a "$IF_VXLAN_GROUP" ] ; then
+	if [ -e /sys/class/net/$IFACE ] ; then
+		/bin/ip link del dev $IFACE
+	fi
+else
+        # not vxlan interface
+        exit 0
+fi
+

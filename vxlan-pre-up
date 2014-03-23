@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# iup hook pre-up script for create vxlan interface
+#
+
+[ -x /bin/ip ] || exit 0
+
+
+VNI=""
+if [ "$IF_VXLAN_VNI" ] ; then
+	VNI="id ${IF_VXLAN_VNI}"
+fi
+
+GRP=""
+if [ "$IF_VXLAN_GROUP" ] ; then
+	GRP="group ${IF_VXLAN_GROUP}"
+fi
+
+DEV=""
+if [ "$IF_VXLAN_DEV" ] ; then
+	DEV="dev ${IF_VXLAN_DEV}"
+fi
+
+if [ "$IF_VXLAN_VNI" -a "$IF_VXLAN_GROUP" ] ; then
+	CMD="link add name ${IFACE} type vxlan ${VNI} ${GRP} ${DEV}"
+else
+	# not vxlan interface
+	exit 0
+fi
+
+if [ ! -e /sys/class/net/$IFACE ] ; then
+	# create vxlan interface
+	/bin/ip $CMD
+fi
+
