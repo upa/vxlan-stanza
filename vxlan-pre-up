@@ -21,8 +21,13 @@ if [ "$IF_VXLAN_DEV" ] ; then
 	DEV="dev ${IF_VXLAN_DEV}"
 fi
 
+TTL="ttl 16"
+if [ "$IF_VXLAN_TTL" ] ; then
+	TTL="ttl ${IF_VXLAN_TTL}"
+fi
+
 if [ "$IF_VXLAN_VNI" -a "$IF_VXLAN_GROUP" ] ; then
-	CMD="link add name ${IFACE} type vxlan ${VNI} ${GRP} ${DEV}"
+	CMD="link add name ${IFACE} type vxlan ${VNI} ${GRP} ${DEV} ${TTL}"
 else
 	# not vxlan interface
 	exit 0
