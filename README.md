@@ -40,6 +40,13 @@ Notation in /etc/network/interfaces
 vxlan-dev can be ommited, and default value of vxlan-ttl is 16.
 
 
+Ansible module for vxlan interface
+----------------------------------
+
+ansible module for create/destroy vxlan interface is stored to 
+ansible-module/. It is not installed automatically by install.sh .
+
+
 Contact
 -------
 upa@haeena.net

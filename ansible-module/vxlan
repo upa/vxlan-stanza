@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+#coding: utf-8 -*-
+
+DOCUMENTATION = '''
+module : vxlan
+description:
+    - Manage VXLAN interface. Require vxlan-stanza
+options:
+    name:
+        required: true
+        description:
+            - Name of vxlan to manage
+    vni:
+        required: true
+        description:
+            - VNI
+    dev:
+        required: true
+        description:
+            - underlay device
+    group:
+        required: true
+        description:
+            - Multicast Group Address
+    state:
+        required: false
+        default: "present"
+        choices: [ present, absent ]
+
+'''
+
+EXAMPLES = '''
+- vxlan: name=vxlan0 vni=0 dev=eth0 group=239.0.0.1 state=present
+'''
+
+class VXLAN (object) :
+
+    def __init__ (self, module) :
+        self.module = module
+        self.name = module.params['name']
+        self.vni = module.params['vni']
+        self.dev = module.params['dev']
+        self.group = module.params['group']
+        self.state = module.params['state']
+        self.stanza = "/etc/network/interfaces.d/" + self.name
+
+    def intf_exists (self) :
+        # check vxlan interface aready exists
+        if os.path.exists ("/sys/class/net/" + self.name) :
+            return True
+        else :
+            return False
+
+    def stanza_exists (self) :
+        if os.path.exists (self.stanza) :
+            return True
+        else :
+            False
+
+    def vxlan_stanza (self) :
+        vxname = self.name
+        vni = self.vni
+        dev = self.dev
+        group = self.group
+
+        return ("auto " + vxname                   + "\n" +
+                "iface " + vxname + " inet manual" + "\n" +
+                "vxlan-vni   " + str (vni)         + "\n" +
+                "vxlan-group " + group             + "\n" +
+                "vxlan-dev   " + dev               + "\n" +
+                "vxlan-ttl   " + str (16)          + "\n" +
+                "post-up ifconfig " + vxname + " up" + "\n" +
+                "post-up ifconfig " + vxname + " mtu 1500" + "\n"
+                )
+
+    def add (self) :
+
+        f = open (self.stanza, 'w')
+        f.write (self.vxlan_stanza ())
+        f.close ()
+
+        return self.module.run_command (['ifup', self.name])
+
+    def delete (self):
+
+        if self.intf_exists () and self.stanza_exists () :
+            return self.module.run_command (['ifdown', self.name])
+        
+        if self.intf_exists () and not self.stanza_exists () :
+            return self.module.run_command (['ip', 'link',
+                                             'del', 'dev', self.name])
+
+    def check (self) :
+
+        try :
+            if self.state == 'absent' and self.intf_exists () :
+                changed = True
+            elif self.state == 'present' and not self.intf_exists () :
+                changed = True
+            else :
+                changed = False
+        except Exception, e :
+            self.module.fail_json (msg = str (e))
+
+        self.module.exit_json (changed = changed)
+
+
+    def run (self) :
+
+        changed = False
+
+        try : 
+            if self.state == 'absent' :
+                if self.intf_exists () :
+                    self.delete ()
+                    changed = True
+            elif self.state == 'present' :
+                if not self.intf_exists () :
+                    self.add ()
+                    changed = True
+        except Exception, e:
+            self.module.fail_json (msg = str (e))
+
+        self.module.exit_json (changed = changed)
+    
+
+def main () :
+    module = AnsibleModule (
+        argument_spec = {
+            'name' : { 'required' : True },
+            'state' : { 'default' : 'present',
+                        'choices' : ['present', 'absent']},
+            'vni' : { 'required':  True},
+            'dev' : { 'required':  True},
+            'group' : { 'required':  True},
+            },
+        supports_check_mode = True
+    )
+
+        
+    vxlan = VXLAN (module)
+    if module.check_mode :
+        vxlan.check ()
+    else :
+        vxlan.run ()
+
+
+from ansible.module_utils.basic import *
+main ()
+
