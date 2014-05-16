@@ -8,6 +8,9 @@ PEER=""
 
 if [ "$IF_VETH_PEER" ];then
 	PEER=$IF_VETH_PEER
+else
+	# not veth interface stanza
+	exit 0
 fi
 
 
