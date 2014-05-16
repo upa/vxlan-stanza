@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# ifdown post-down hook script for veth pair interfaces
+#
+
+if [ "$IF_VETH_PEER"  ]; then
+	if [ -e /sys/class/net/$IFACE  ]; then
+		/bin/ip link del dev $IFACE
+	fi
+else
+	# not veth interface
+	exit 0
+fi

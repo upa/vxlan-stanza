@@ -2,7 +2,7 @@ Stanza for vxlan interface initialization
 =========================================
 
 This script enables that you can create, confiugre, destroy kernel 
-vxlan interfaces through /etc/network/interfaces notation.
+vxlan interfaces through /etc/network/interfaces notation. 
 
 Install
 -------
@@ -45,6 +45,19 @@ Ansible module for vxlan interface
 
 ansible module for create/destroy vxlan interface is stored to 
 ansible-module/. It is not installed automatically by install.sh .
+
+An addition: veth stanza
+------------------------
+
+veth stanza enables that you can create veth interface through
+/etc/network/interfaces. notation about veth interface is shown below.
+
+	 
+	 iface veth0a inet manual
+	 	veth-peer veth0b
+
+veth stanza is installed with vxlan stanza by install.sh .	 
+
 
 
 Contact

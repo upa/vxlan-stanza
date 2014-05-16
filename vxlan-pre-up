@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# iup hook pre-up script for create vxlan interface
+# ifup hook pre-up script for create vxlan interface
 #
 
 [ -x /bin/ip ] || exit 0

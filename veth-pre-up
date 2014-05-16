@@ -1,0 +1,21 @@
+#!/bin/sh
+# ifup hook pre-up script for create veth pair interfaces
+#
+
+[ -x /bin/ip ] || exit 0
+
+PEER=""
+
+if [ "$IF_VETH_PEER" ];then
+	PEER=$IF_VETH_PEER
+fi
+
+
+if [ ! -e /sys/class/net/$IFACE  ]; then
+	# create veth interfaces
+	/bin/ip link add name $IFACE type veth peer name $PEER
+fi
+
+if [ $? -eq 0 ]; then
+	/bin/ip link set dev $PEER up
+fi
