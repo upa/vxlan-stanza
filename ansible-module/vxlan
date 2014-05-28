@@ -4,7 +4,7 @@
 DOCUMENTATION = '''
 module : vxlan
 description:
-    - Manage VXLAN interface. Require vxlan-stanza
+    - Manage VXLAN interface.
 options:
     name:
         required: true
@@ -39,10 +39,11 @@ class VXLAN (object) :
         self.module = module
         self.name = module.params['name']
         self.vni = module.params['vni']
-        self.dev = module.params['dev']
         self.group = module.params['group']
+        self.mtu = module.params['mtu']
+        self.dev = module.params['dev']
         self.state = module.params['state']
-        self.stanza = "/etc/network/interfaces.d/" + self.name
+
 
     def intf_exists (self) :
         # check vxlan interface aready exists
@@ -51,44 +52,38 @@ class VXLAN (object) :
         else :
             return False
 
-    def stanza_exists (self) :
-        if os.path.exists (self.stanza) :
-            return True
-        else :
-            False
-
-    def vxlan_stanza (self) :
-        vxname = self.name
-        vni = self.vni
-        dev = self.dev
-        group = self.group
-
-        return ("auto " + vxname                   + "\n" +
-                "iface " + vxname + " inet manual" + "\n" +
-                "vxlan-vni   " + str (vni)         + "\n" +
-                "vxlan-group " + group             + "\n" +
-                "vxlan-dev   " + dev               + "\n" +
-                "vxlan-ttl   " + str (16)          + "\n" +
-                "post-up ifconfig " + vxname + " up" + "\n" +
-                "post-up ifconfig " + vxname + " mtu 1500" + "\n"
-                )
 
     def add (self) :
 
-        f = open (self.stanza, 'w')
-        f.write (self.vxlan_stanza ())
-        f.close ()
+        cmd = ['ip', 'link', 'add', 'name', self.name, 'type', 'vxlan',
+               'vni', self.vni, 'group', self.group, 'dev', self.dev]
 
-        return self.module.run_command (['ifup', self.name])
+        (rc, out, err) = self.module.run_command (cmd)
+
+        if rc != 0 :
+            raise Exception (err)
+
+        cmd = ['ifconfig', self.name, 'mtu', self.mtu]
+        (rc, out, err) = self.module.run_command (cmd)
+
+        if rc != 0 :
+            raise Exception (err)
+        
+        cmd = ['ifconfig', self.name, 'up']
+        (rc, out, err) = self.module.run_command (cmd)
+
+        if rc != 0 :
+            raise Exception (err)
+
+        return
+
 
     def delete (self):
 
-        if self.intf_exists () and self.stanza_exists () :
-            return self.module.run_command (['ifdown', self.name])
-        
-        if self.intf_exists () and not self.stanza_exists () :
+        if self.intf_exists () :
             return self.module.run_command (['ip', 'link',
                                              'del', 'dev', self.name])
+
 
     def check (self) :
 
@@ -133,6 +128,7 @@ def main () :
             'vni' : { 'required':  True},
             'dev' : { 'required':  True},
             'group' : { 'required':  True},
+            'mtu' : { 'default' : '1500' },
             },
         supports_check_mode = True
     )
